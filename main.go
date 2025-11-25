@@ -45,7 +45,7 @@ func main() {
 				if err != nil {
 					panic(err)
 				}
-				fmt.Printf("  Tx #%d %s: \n\tGas: %d\n\tReturnValue: %s\n", i, hash, res.Gas, res.ReturnValue)
+				fmt.Printf("  Tx #%d %s: \n\tGas: %d\n\tReturnValue: %s\n\tLogs: %d\n", i, hash, res.Gas, res.ReturnValue, len(res.StructLogs))
 			}
 			fmt.Println()
 		}

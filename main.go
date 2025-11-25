@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/umbracle/ethgo"
@@ -41,15 +42,25 @@ func main() {
 			fmt.Printf("\nGet block #%d, txs: %d\n", block.Number, len(block.TransactionsHashes))
 			fmt.Printf("Tracing transactions: \n")
 			for i, hash := range block.TransactionsHashes {
-				res, err := client.Debug().TraceTransaction(hash)
-				if err != nil {
-					panic(err)
-				}
-				fmt.Printf("  Tx #%d %s: \n\tGas: %d\n\tReturnValue: %s\n\tLogs: %d\n", i, hash, res.Gas, res.ReturnValue, len(res.StructLogs))
+				traceTx(client, i, hash)
 			}
 			fmt.Println()
 		}
 		time.Sleep(10 * time.Millisecond)
 		number++
+	}
+}
+
+func traceTx(client *jsonrpc.Client, txIdx int, hash ethgo.Hash) {
+	for range 3 {
+		res, err := client.Debug().TraceTransaction(hash)
+		if err != nil {
+			if strings.Contains(err.Error(), "execution timeout") {
+				continue
+			}
+			panic(err)
+		}
+		fmt.Printf("  Tx #%d %s: \n\tGas: %d\n\tReturnValue: %s\n\tLogs: %d\n", txIdx, hash, res.Gas, res.ReturnValue, len(res.StructLogs))
+		return
 	}
 }

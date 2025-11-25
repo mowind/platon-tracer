@@ -34,17 +34,22 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("get block #%d, txs: %d\n", block.Number, len(block.Transactions))
-		if len(block.Transactions) > 0 {
-			for _, tx := range block.Transactions {
-				res, err := client.Debug().TraceTransaction(tx.Hash)
+		if (block.Number)%500 == 0 {
+			fmt.Printf("Get block #%d, txs: %d\n", block.Number, len(block.TransactionsHashes))
+		}
+		if len(block.TransactionsHashes) > 0 {
+			fmt.Printf("\nGet block #%d, txs: %d\n", block.Number, len(block.TransactionsHashes))
+			fmt.Printf("Tracing transactions: \n")
+			for i, hash := range block.TransactionsHashes {
+				res, err := client.Debug().TraceTransaction(hash)
 				if err != nil {
 					panic(err)
 				}
-				fmt.Printf("Tx %s trace: \n\tGas: %d\n\tReturnValue: %s\n", tx.Hash, res.Gas, res.ReturnValue)
+				fmt.Printf("  Tx #%d %s: \n\tGas: %d\n\tReturnValue: %s\n", i, hash, res.Gas, res.ReturnValue)
 			}
+			fmt.Println()
 		}
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		number++
 	}
 }

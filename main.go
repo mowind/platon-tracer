@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/umbracle/ethgo"
 	"github.com/umbracle/ethgo/jsonrpc"
@@ -50,7 +49,6 @@ func main() {
 			}
 			fmt.Println()
 		}
-		time.Sleep(10 * time.Millisecond)
 		number++
 	}
 }

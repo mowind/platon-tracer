@@ -42,7 +42,11 @@ func main() {
 			fmt.Printf("\nGet block #%d, txs: %d\n", block.Number, len(block.TransactionsHashes))
 			fmt.Printf("Tracing transactions: \n")
 			for i, hash := range block.TransactionsHashes {
-				traceTx(client, i, hash)
+				receipt, err := client.Eth().GetTransactionReceipt(hash)
+				if err != nil {
+					panic(err)
+				}
+				traceTx(client, i, receipt, hash)
 			}
 			fmt.Println()
 		}
@@ -51,7 +55,7 @@ func main() {
 	}
 }
 
-func traceTx(client *jsonrpc.Client, txIdx int, hash ethgo.Hash) {
+func traceTx(client *jsonrpc.Client, txIdx int, receipt *ethgo.Receipt, hash ethgo.Hash) {
 	for range 3 {
 		res, err := client.Debug().TraceTransaction(hash)
 		if err != nil {
@@ -61,6 +65,10 @@ func traceTx(client *jsonrpc.Client, txIdx int, hash ethgo.Hash) {
 			panic(err)
 		}
 		fmt.Printf("  Tx #%d %s: \n\tGas: %d\n\tReturnValue: %s\n\tLogs: %d\n", txIdx, hash, res.Gas, res.ReturnValue, len(res.StructLogs))
+		if receipt.GasUsed != res.Gas {
+			fmt.Printf("  Tx #%d %s: invalid gas used(receipt: %d, trace: %d)\n", txIdx, hash, receipt.GasUsed, res.Gas)
+			panic("invalid gas used")
+		}
 		return
 	}
 }

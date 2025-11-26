@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/umbracle/ethgo"
 	"github.com/umbracle/ethgo/jsonrpc"
@@ -29,16 +30,22 @@ func main() {
 	}
 
 	number := startBlock.Int64()
+	begin := time.Now()
 	for {
 		block, err := client.Eth().GetBlockByNumber(ethgo.BlockNumber(number), false)
 		if err != nil {
 			panic(err)
 		}
+		if block == nil {
+			time.Sleep(50 * time.Millisecond)
+			continue
+		}
 		if (block.Number)%500 == 0 {
-			fmt.Printf("Get block #%d, txs: %d\n", block.Number, len(block.TransactionsHashes))
+			fmt.Printf("Get block #%d, txs: %d, duration: %s\n", block.Number, len(block.TransactionsHashes), time.Since(begin))
+			begin = time.Now()
 		}
 		if len(block.TransactionsHashes) > 0 {
-			fmt.Printf("\nGet block #%d, txs: %d\n", block.Number, len(block.TransactionsHashes))
+			fmt.Printf("\nGet block #%d, txs: %d, duration: %s\n", block.Number, len(block.TransactionsHashes), time.Since(begin))
 			fmt.Printf("Tracing transactions: \n")
 			for i, hash := range block.TransactionsHashes {
 				receipt, err := client.Eth().GetTransactionReceipt(hash)

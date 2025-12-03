@@ -55,16 +55,18 @@ func main() {
 				traceTx(client, i, receipt, hash)
 			}
 			fmt.Println()
+		} else {
+			time.Sleep(20 * time.Millisecond)
 		}
 		number++
 	}
 }
 
 func traceTx(client *jsonrpc.Client, txIdx int, receipt *ethgo.Receipt, hash ethgo.Hash) {
-	for range 3 {
+	for range 10 {
 		res, err := client.Debug().TraceTransaction(hash)
 		if err != nil {
-			if strings.Contains(err.Error(), "execution timeout") {
+			if strings.Contains(err.Error(), "execution timeout") || strings.Contains(err.Error(), "request timed out") {
 				continue
 			}
 			panic(err)

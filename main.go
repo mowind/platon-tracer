@@ -42,31 +42,23 @@ func main() {
 	fmt.Println("start block", startBlock)
 
 	number := startBlock.Int64()
-	begin := time.Now()
 	for {
-		block, err := client.Eth().GetBlockByNumber(ethgo.BlockNumber(number), false)
+		begin := time.Now()
+		traces, err := client.Debug().TraceBlockByNumber(ethgo.BlockNumber(number), jsonrpc.TraceTransactionOptions{})
 		if err != nil {
+			if strings.Contains(err.Error(), "execution timeout") || strings.Contains(err.Error(), "request timed out") {
+				fmt.Printf("Trace Block #%d %v, retrying\n", number, err)
+				continue
+			}
 			panic(err)
 		}
-		if block == nil {
-			time.Sleep(50 * time.Millisecond)
-			continue
+
+		if number%500 == 0 {
+			fmt.Printf("Trace block #%d, Txs: %d, duration: %s\n", number, len(traces), time.Since(begin))
 		}
-		if (block.Number)%500 == 0 {
-			fmt.Printf("Get block #%d, txs: %d, duration: %s\n", block.Number, len(block.TransactionsHashes), time.Since(begin))
-			begin = time.Now()
-		}
-		if len(block.TransactionsHashes) > 0 {
-			fmt.Printf("\nGet block #%d, txs: %d, duration: %s\n", block.Number, len(block.TransactionsHashes), time.Since(begin))
-			fmt.Printf("Tracing transactions: \n")
-			for i, hash := range block.TransactionsHashes {
-				receipt, err := client.Eth().GetTransactionReceipt(hash)
-				if err != nil {
-					panic(err)
-				}
-				traceTx(client, i, receipt, hash)
-			}
-			fmt.Println()
+		if len(traces) > 0 {
+			fmt.Printf("Trace block #%d, Txs: %d, duration: %s\n", number, len(traces), time.Since(begin))
+			printTraceTx(client, traces)
 		} else {
 			time.Sleep(20 * time.Millisecond)
 		}
@@ -74,9 +66,27 @@ func main() {
 	}
 }
 
+func printTraceTx(client *jsonrpc.Client, blockTrace []*jsonrpc.BlockTrace) {
+	for i, txTrace := range blockTrace {
+		if txTrace.Error != "" {
+			panic(txTrace.Error)
+		}
+		receipt, err := client.Eth().GetTransactionReceipt(txTrace.TxHash)
+		if err != nil {
+			panic(err)
+		}
+		res := txTrace.Result
+		fmt.Printf("  Tx #%d %s: \n\tGas: %d\n\tReturnValue: %s\n\tLogs: %d\n", i, txTrace.TxHash, res.Gas, res.ReturnValue, len(res.StructLogs))
+		if receipt.GasUsed != res.Gas {
+			fmt.Printf("  Tx #%d %s: invalid gas used(receipt: %d, trace: %d)\n", i, txTrace.TxHash, receipt.GasUsed, res.Gas)
+			panic("invalid gas used")
+		}
+	}
+}
+
 func traceTx(client *jsonrpc.Client, txIdx int, receipt *ethgo.Receipt, hash ethgo.Hash) {
 	for {
-		res, err := client.Debug().TraceTransaction(hash)
+		res, err := client.Debug().TraceTransaction(hash, jsonrpc.TraceTransactionOptions{})
 		if err != nil {
 			if strings.Contains(err.Error(), "execution timeout") || strings.Contains(err.Error(), "request timed out") {
 				fmt.Printf("Trace Tx %s %v, retrying\n", hash, err)

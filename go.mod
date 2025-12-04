@@ -14,5 +14,7 @@ require (
 	github.com/valyala/fasthttp v1.4.0 // indirect
 	github.com/valyala/fastjson v1.4.1 // indirect
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
-	golang.org/x/sys v0.0.0-20191026070338-33540a1f6037 // indirect
+	golang.org/x/sys v0.7.0 // indirect
 )
+
+replace github.com/umbracle/ethgo => github.com/mowind/ethgo v0.0.0-20251204084928-bc160217f604

@@ -153,6 +153,7 @@ func traceTxMain(ctx context.Context, cmd *cli.Command) error {
 			}
 			fmt.Println()
 		}
+		startBlock++
 	}
 }
 

@@ -96,10 +96,10 @@ func traceBlockMain(ctx context.Context, cmd *cli.Command) error {
 		}
 
 		if number%500 == 0 {
-			fmt.Printf("Trace block #%d, Txs: %d, duration: %s\n", number, len(traces), time.Since(begin))
+			fmt.Printf("[%s] Trace block #%d, Txs: %d, duration: %s\n", time.Now(), number, len(traces), time.Since(begin))
 		}
 		if len(traces) > 0 {
-			fmt.Printf("Trace block #%d, Txs: %d, duration: %s\n", number, len(traces), time.Since(begin))
+			fmt.Printf("[%s] Trace block #%d, Txs: %d, duration: %s\n", time.Now(), number, len(traces), time.Since(begin))
 			printTraceTx(client, traces)
 		} else {
 			time.Sleep(20 * time.Millisecond)
@@ -141,11 +141,11 @@ func traceTxMain(ctx context.Context, cmd *cli.Command) error {
 			continue
 		}
 		if (block.Number)%500 == 0 {
-			fmt.Printf("Get block #%d, txs: %d, duration: %s\n", block.Number, len(block.TransactionsHashes), time.Since(begin))
+			fmt.Printf("[%s] Get block #%d, txs: %d, duration: %s\n", time.Now(), block.Number, len(block.TransactionsHashes), time.Since(begin))
 		}
 		if len(block.TransactionsHashes) > 0 {
-			fmt.Printf("\nGet block #%d, txs: %d, duration: %s\n", block.Number, len(block.TransactionsHashes), time.Since(begin))
-			fmt.Printf("Tracing transactions: \n")
+			fmt.Printf("\n[%s] Get block #%d, txs: %d, duration: %s\n", time.Now(), block.Number, len(block.TransactionsHashes), time.Since(begin))
+			fmt.Printf("[%s] Tracing transactions: \n", time.Now())
 			for i, hash := range block.TransactionsHashes {
 				if err := traceTx(client, i, hash); err != nil {
 					return err
@@ -176,6 +176,7 @@ func printTraceTx(client *jsonrpc.Client, blockTrace []*jsonrpc.BlockTrace) {
 }
 
 func traceTx(client *jsonrpc.Client, txIdx int, hash ethgo.Hash) error {
+	begin := time.Now()
 	for {
 		res, err := client.Debug().TraceTransaction(hash, jsonrpc.TraceTransactionOptions{})
 		if err != nil {
@@ -185,7 +186,7 @@ func traceTx(client *jsonrpc.Client, txIdx int, hash ethgo.Hash) error {
 			}
 			return err
 		}
-		fmt.Printf("  Tx #%d %s: \n\tGas: %d\n\tReturnValue: %s\n\tLogs: %d\n", txIdx, hash, res.Gas, res.ReturnValue, len(res.StructLogs))
+		fmt.Printf("  Tx #%d %s: \n\tGas: %d\n\tReturnValue: %s\n\tLogs: %d\n\tDuration: %s\n", txIdx, hash, res.Gas, res.ReturnValue, len(res.StructLogs), time.Since(begin))
 
 		receipt, err := client.Eth().GetTransactionReceipt(hash)
 		if err != nil {

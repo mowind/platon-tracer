@@ -180,7 +180,7 @@ func traceTx(client *jsonrpc.Client, txIdx int, hash ethgo.Hash) error {
 	for {
 		res, err := client.Debug().TraceTransaction(hash, jsonrpc.TraceTransactionOptions{})
 		if err != nil {
-			if strings.Contains(err.Error(), "execution timeout") || strings.Contains(err.Error(), "request timed out") {
+			if strings.Contains(err.Error(), "execution timeout") || strings.Contains(err.Error(), "request timed out") || strings.Contains(err.Error(), "leveldb: not found") {
 				fmt.Printf("Trace Tx %s %v, retrying\n", hash, err)
 				continue
 			}
